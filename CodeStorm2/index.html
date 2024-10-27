@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Live Location Tracker - Track your location in real-time.">
+    <meta name="keywords" content="Location, Tracker, GPS, Live-Location, Location-Sharing, Real-time, Location-Sharing">
+    <link rel="canonical" href="https://securetrack.com/">
+
+    <title>Secure Track</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            padding-top: calc(120px + 20px); 
+        }
+        .container {
+            width: 100%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+        p {
+            margin: 5px 0 10px;
+            color: #666;
+        }
+        .options {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+        }
+        .options a {
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+            transition: color 0.2s ease;
+        }
+        .options a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        .content {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 20px;
+            margin: 20px;
+        }
+        .floating-container {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 45%;
+        }
+        .floating-container h2 {
+            margin-top: 0;
+        }
+        .address-container {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+                align-items: center;
+            }
+            .floating-container {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Secure Track</h1>
+    <p>Tracking every step wherever you go</p>
+    <div class="options">
+        <a href="#">About Us</a>
+        <a href="#">Rate Us</a>
+        <a href="#">FAQ</a>
+        <a href="#">Customer Care</a>
+    </div>
+</div>
+
+<div class="content">
+    <div class="floating-container" id="map-container">
+        <h2>Your Real-Time Location</h2>
+        <div id="map" style="height: 300px; background-color: #e0e0e0; border-radius: 8px;"></div>
+    </div>
+    <div class="floating-container">
+        <h2>About Secure Track</h2>
+        <p>Secure Track is your trusted partner for precise, real-time location tracking, designed to keep you connected with the people and places that matter most. Our platform empowers you to share your live location with friends, family, or colleagues securely and effortlessly. Whether you're coordinating with friends, monitoring loved ones, or managing a team on the go, Secure Track gives you peace of mind and control.</p>
+        <p>With easy-to-use features and state-of-the-art security, Secure Track ensures that your location data remains private and accessible only to those you choose. Embrace the convenience of staying connected wherever you are, knowing that you’re in safe hands with Secure Track.</p>
+        <div class="address-container">
+            <h3>Your Address</h3>
+            <p id="address">Loading address...</p>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            (position) => {
+                const userLocation = [position.coords.latitude, position.coords.longitude];
+                map.setView(userLocation, 15);
+                if (!map.userMarker) {
+                    map.userMarker = L.marker(userLocation).addTo(map).bindPopup("You are here").openPopup();
+                } else {
+                    map.userMarker.setLatLng(userLocation);
+                }
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLocation[0]}&lon=${userLocation[1]}&format=json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.display_name) {
+                            document.getElementById("address").innerText = data.display_name; // Display the address
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error fetching address:", err);
+                        document.getElementById("address").innerText = "Unable to retrieve address.";
+                    });
+            },
+            (error) => console.error("Geolocation error:", error),
+            { enableHighAccuracy: true }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+</script>
+</body>
+</html>
